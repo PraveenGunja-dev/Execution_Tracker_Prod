@@ -142,4 +142,7 @@ if os.path.exists(frontend_dist):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=3121, reload=True)
+    # Use PORT from env if available, else default to 3122
+    # In earlier revisions it was set to 3121, switching to 3122 for testing
+    port = int(os.environ.get("PORT", 3122))
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
