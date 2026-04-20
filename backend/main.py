@@ -107,11 +107,12 @@ if os.path.exists(frontend_dist):
 
     @app.api_route("/{path_name:path}", methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"])
     async def catch_all(path_name: str, request: Request):
-        # 1. Try to serve exact file from frontend_dist (CSS, JS, Images, etc.)
-        file_path = os.path.join(frontend_dist, path_name)
+        # 1. Clean path for Windows
+        clean_path = path_name.replace("/", os.sep)
+        file_path = os.path.abspath(os.path.join(frontend_dist, clean_path))
         
-        # DEBUG LOGGING (Check your terminal for these prints!)
-        print(f"[DEBUG] Requested: {path_name} | Looking at: {file_path}")
+        # DEBUG LOGGING
+        print(f"[DEBUG] Full Path: {file_path}")
         
         if os.path.isfile(file_path):
             return FileResponse(file_path)
