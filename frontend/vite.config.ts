@@ -12,7 +12,7 @@ export default defineConfig({
         port: 3001,
         proxy: {
             '^/execution-tracker/api': {
-                target: 'http://localhost:3122',
+                target: 'http://localhost:3121',
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/execution-tracker\/api/, '/api')
             },
