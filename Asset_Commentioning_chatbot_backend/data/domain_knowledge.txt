@@ -1,0 +1,146 @@
+🔹 1. OVERALL TARGET CAPACITY LOGIC
+
+Q: How is Total Overall Target Capacity calculated?
+Answer:
+Total Target Capacity is calculated by SUMMING all 12 monthly phasing columns
+(apr+may+jun+jul+aug+sep+oct+nov+dec+jan+feb+mar) from the 'commissioning_projects' table.
+This is the EXACT same math used by the CEO Tracker UI.
+Filters required:
+- fiscal_year = [Select FY, e.g., 'FY_25-26']
+- plan_actual = 'Plan'
+- included_in_total = 1 (True)
+- is_deleted = 0 (False)
+NOTE: Do NOT use the 'total_capacity' column — it may be stale. Always sum monthly columns.
+
+Q: How is Total Solar Target calculated?
+Answer:
+Sum of all 12 monthly columns from 'commissioning_projects'.
+Filter by: category LIKE '%Solar%' (NOT project_type — project_type has values Merchant/Group/PPA).
+Standard Filters: fiscal_year, plan_actual='Plan', included_in_total=1, is_deleted=0.
+
+Q: How is Total Wind Target calculated?
+Answer:
+Sum of all 12 monthly columns from 'commissioning_projects'.
+Filter by: category LIKE '%Wind%' (NOT project_type).
+Standard Filters: fiscal_year, plan_actual='Plan', included_in_total=1, is_deleted=0.
+
+Q: How to ensure Solar + Wind equals Total Target?
+Answer:
+Solar is identified by category containing 'Solar'. Wind by category containing 'Wind'.
+Total = Sum(Solar Projects) + Sum(Wind Projects).
+Always verify using the 'included_in_total=1' flag.
+
+---
+
+🔹 2. PROJECT LEVEL LOGIC
+
+Q: How to find the capacity of a specific project (e.g., 'SECI H-3')?
+Answer:
+Calculate capacity as SUM(apr+may+jun+jul+aug+sep+oct+nov+dec+jan+feb+mar)
+from 'commissioning_projects'.
+Filter by: project_name LIKE '%SECI H-3%'.
+Standard Filters: fiscal_year, plan_actual='Plan' (for Target) or 'Actual' (for Commissioned), is_deleted=0.
+
+Q: What defines a "valid" project for reporting?
+Answer:
+A project is valid only if 'is_deleted' is 0.
+For "Target" reporting, it must also have 'included_in_total' = 1.
+
+---
+
+🔹 3. LOCATION & CATEGORY LOGIC
+
+Q: How is Khavda vs Rajasthan capacity calculated?
+Answer:
+Filter by the 'category' column which contains location-based names.
+Solar categories: 'Khavda Solar', 'Rajasthan & Non-Khavda Solar', 'Rajasthan Solar',
+  'Rajasthan Solar Additional 500MW', 'Khavda Solar Copper+Merchant 50MW', 'Khavda Solar Internal 650MW'.
+Wind categories: 'Khavda Wind', 'Non-Khavda Wind', 'Mundra Wind 76MW',
+  'Mundra Wind Internal 224.4MW', 'Khavda Wind Internal 421MW'.
+
+Q: What constitutes a "Category" target?
+Answer:
+Sum of monthly columns grouped by the 'category' column.
+
+---
+
+🔹 4. FISCAL YEAR & TIME LOGIC
+
+Q: What is a Fiscal Year (FY) in this database?
+Answer:
+A 12-month period stored as a string (e.g., 'FY_25-26', 'FY_26-27').
+April to March. Default is 'FY_25-26'.
+
+Q: How are Q1, Q2, Q3, Q4 targets derived?
+Answer:
+Q1 = apr + may + jun
+Q2 = jul + aug + sep
+Q3 = oct + nov + dec
+Q4 = jan + feb + mar
+Total = Q1 + Q2 + Q3 + Q4 = sum of all 12 monthly columns.
+
+---
+
+🔹 5. PLAN VS ACTUAL LOGIC
+
+Q: What is "Plan"?
+Answer:
+Rows where plan_actual = 'Plan'. Represents the target.
+
+Q: What is "Actual"?
+Answer:
+Rows where plan_actual = 'Actual'. Represents physical commissioning achieved.
+
+Q: What is "Rephase"?
+Answer:
+Rows where plan_actual = 'Rephase'. Represents rescheduled/deferred targets.
+
+Q: What is "Variance"?
+Answer:
+Variance = Sum(Actual monthly columns) - Sum(Plan monthly columns).
+Negative = underperformance. Positive = overperformance.
+
+---
+
+🔹 6. DATA AUTHORITY & INTEGRITY
+
+Q: What is the Source of Truth?
+Answer:
+The SQLite database 'commissioning_projects' table is the ONLY source of truth.
+ALWAYS compute capacity from the 12 monthly columns (apr..mar).
+NEVER use the stored 'total_capacity' column as it may be outdated.
+
+Q: How to handle missing data?
+Answer:
+If a query returns NULL or 0, report "No data found" or "0 MW". NEVER fabricate a number.
+
+Q: What is "included_in_total"?
+Answer:
+A boolean flag (0 or 1).
+1 = Officially counts towards the CEO Tracker Board number.
+0 = Internal/Draft/Shadow number (excluded from topline targets).
+
+---
+
+🔹 7. DATABASE SCHEMA
+
+Table: commissioning_projects
+Key Columns:
+- id (INTEGER PRIMARY KEY)
+- sno (INTEGER)
+- project_name (TEXT)
+- spv (TEXT)
+- project_type (TEXT) — values: 'Merchant', 'Group', 'PPA' (NOT Solar/Wind!)
+- category (TEXT) — e.g., 'Khavda Solar', 'Rajasthan Solar', 'Khavda Wind', 'Non-Khavda Wind'
+  THIS is how Solar/Wind is identified — by checking if category contains 'Solar' or 'Wind'.
+- section (TEXT) — 'A', 'B', 'C', 'D', 'D1', 'D2'
+- plan_actual (TEXT) — 'Plan', 'Actual', or 'Rephase'
+- fiscal_year (TEXT) — 'FY_25-26' or 'FY_26-27'
+- capacity (REAL)
+- total_capacity (REAL) — may be stale, use monthly sum instead
+- apr, may, jun, jul, aug, sep, oct, nov, dec, jan, feb, mar (REAL) — monthly MW values
+- q1, q2, q3, q4 (REAL) — quarterly values (may be stale)
+- included_in_total (BOOLEAN) — 0 or 1
+- is_deleted (BOOLEAN) — 0 or 1
+- plot_location (TEXT)
+- cumm_till_oct (REAL)

@@ -1,0 +1,38 @@
+[
+    {
+        "category": "Overall",
+        "metric": "Total Target Capacity",
+        "description": "The CEO-level topline target for the fiscal year.",
+        "calculation_rule": "SELECT SUM(total_capacity) FROM commissioning_projects WHERE fiscal_year = :fy AND plan_actual = 'Plan' AND included_in_total = 1 AND is_deleted = 0 AND section = 'A'"
+    },
+    {
+        "category": "Solar",
+        "metric": "Total Solar Target",
+        "description": "Topline target for all Solar assets.",
+        "calculation_rule": "SELECT SUM(total_capacity) FROM commissioning_projects WHERE (category LIKE '%Solar%' OR project_type = 'Solar') AND fiscal_year = :fy AND plan_actual = 'Plan' AND included_in_total = 1 AND is_deleted = 0"
+    },
+    {
+        "category": "Wind",
+        "metric": "Total Wind Target",
+        "description": "Topline target for all Wind assets.",
+        "calculation_rule": "SELECT SUM(total_capacity) FROM commissioning_projects WHERE (category LIKE '%Wind%' OR project_type = 'Wind') AND fiscal_year = :fy AND plan_actual = 'Plan' AND included_in_total = 1 AND is_deleted = 0"
+    },
+    {
+        "category": "Project",
+        "metric": "Specific Project Capacity",
+        "description": "Capacity for a named project. Replace :project_name with user input.",
+        "calculation_rule": "SELECT total_capacity FROM commissioning_projects WHERE project_name LIKE :project_name AND fiscal_year = :fy AND plan_actual = 'Plan' AND included_in_total = 1 AND is_deleted = 0"
+    },
+    {
+        "category": "Location",
+        "metric": "Location Total Target",
+        "description": "Capacity aggregated by location (e.g., Khavda, Rajasthan).",
+        "calculation_rule": "SELECT SUM(total_capacity) FROM commissioning_projects WHERE (spv LIKE :location OR category LIKE :location) AND fiscal_year = :fy AND plan_actual = 'Plan' AND included_in_total = 1 AND is_deleted = 0"
+    },
+    {
+        "category": "Variance",
+        "metric": "Plan vs Actual Variance",
+        "description": "Difference between commissioned (Actual) and target (Plan).",
+        "calculation_rule": "SELECT (SELECT SUM(total_capacity) FROM commissioning_projects WHERE plan_actual='Actual' AND fiscal_year=:fy) - (SELECT SUM(total_capacity) FROM commissioning_projects WHERE plan_actual='Plan' AND fiscal_year=:fy) as variance"
+    }
+]
