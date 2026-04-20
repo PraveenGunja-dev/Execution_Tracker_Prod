@@ -101,26 +101,21 @@ async def health():
 if os.path.exists(frontend_dist):
     assets_dir = os.path.join(frontend_dist, "assets")
     if os.path.exists(assets_dir):
-        # Mount with the correct path prefix to ensure performance for asset loading
-        app.mount("/execution-tracker/assets", StaticFiles(directory=assets_dir), name="assets")
-        # Also mount root assets just in case
-        app.mount("/assets", StaticFiles(directory=assets_dir), name="root_assets")
+        # Mount assets at /assets because Nginx strips the /execution-tracker/ prefix
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
 
     @app.api_route("/{path_name:path}", methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"])
     async def catch_all(path_name: str, request: Request):
-        # 1. API routes should have been caught by routers above.
-        # If they weren't, they are truly 404s.
+        # 1. Try to serve exact file from frontend_dist (CSS, JS, Images, etc.)
+        file_path = os.path.join(frontend_dist, path_name)
+        if os.path.isfile(file_path):
+            return FileResponse(file_path)
+
+        # 2. If it's an API route that wasn't caught, return JSON error
         if path_name.startswith("api/"):
             return {"error": f"API route '{path_name}' not found"}
 
-        # 2. Try to serve exact file from frontend_dist (for images, icons, robots.txt)
-        file_path = os.path.join(frontend_dist, path_name)
-        if path_name and os.path.isfile(file_path):
-            return FileResponse(file_path)
-
         # 3. Fallback to index.html for React Router (Single Page Application)
-        # We must support ALL methods here (like GET, OPTIONS) so React Router doesn't crash
-        # on direct browser navigations with URL parameters.
         index_path = os.path.join(frontend_dist, "index.html")
         if os.path.exists(index_path):
             return FileResponse(index_path)
