@@ -99,6 +99,24 @@ const HomePage = () => {
                     {!user ? (
                         <div className="bg-white/10 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl">
                             <h3 className="text-white text-lg font-black uppercase tracking-widest mb-6 opacity-80">Portal Authentication</h3>
+                            
+                            {/* SSO Login Button */}
+                            <button
+                                onClick={() => window.location.href = `${API_BASE}/api/sso/login`}
+                                className="w-full mb-8 py-4 bg-linear-to-r from-[#0B74B0] to-[#75479C] text-white text-xs font-black uppercase tracking-[0.2em] rounded-xl hover:scale-[1.02] transition-all active:scale-95 cursor-pointer shadow-lg flex items-center justify-center gap-3"
+                            >
+                                Login with Adani SSO
+                            </button>
+
+                            <div className="relative mb-8">
+                                <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full border-t border-white/10"></div>
+                                </div>
+                                <div className="relative flex justify-center text-xs uppercase tracking-widest">
+                                    <span className="px-2 bg-[#0c0c0c]/0 text-white/40 font-black">or use credentials</span>
+                                </div>
+                            </div>
+
                             <form 
                                 onSubmit={async (e) => {
                                     e.preventDefault();
