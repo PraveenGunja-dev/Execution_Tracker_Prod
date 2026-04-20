@@ -110,42 +110,29 @@ async def health():
     return {"status": "ok", "database": "postgresql"}
 
 # Serve FastAPI static files for frontend
-# (frontend_dist defined above)
-
 if os.path.exists(frontend_dist):
-    assets_dir = os.path.join(frontend_dist, "assets")
-    if os.path.exists(assets_dir):
-        # Mount assets at /assets because Nginx strips the /execution-tracker/ prefix
-        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
-
     @app.api_route("/{path_name:path}", methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"])
     async def catch_all(path_name: str, request: Request):
-        # 1. Clean path for Windows
+        # 1. Generate full path
         clean_path = path_name.replace("/", os.sep)
         file_path = os.path.abspath(os.path.join(frontend_dist, clean_path))
         
-        # DEBUG LOGGING
-        print(f"[DEBUG] Full Path: {file_path}")
+        # DEBUG LOGGING (Very important to see this!)
+        print(f"[DEBUG] Request Path: '{path_name}' -> Searching in: {file_path}")
         
+        # 2. Try to serve exact file (CSS, JS, Images, etc.)
         if os.path.isfile(file_path):
             return FileResponse(file_path)
 
-        # 2. Prevent MIME type errors! 
-        # If the browser asks for a CSS/JS file and it's missing, return a 404, NOT index.html.
+        # 3. Prevent MIME type errors for missing assets
         if any(path_name.endswith(ext) for ext in [".css", ".js", ".map", ".ico", ".png", ".jpg"]):
-            return JSONResponse(
-                status_code=404, 
-                content={"error": f"Static asset '{path_name}' not found on server"}
-            )
+            return JSONResponse(status_code=404, content={"error": f"Asset '{path_name}' not found"})
 
-        # 3. If it's an API route that wasn't caught, return JSON error
+        # 4. If it's an API route that wasn't caught, return JSON error
         if path_name.startswith("api/"):
-            return JSONResponse(
-                status_code=404, 
-                content={"error": f"API route '{path_name}' not found"}
-            )
+            return JSONResponse(status_code=404, content={"error": "API not found"})
 
-        # 4. Fallback to index.html for React Router (SPA)
+        # 5. Fallback to index.html for React Router
         index_path = os.path.join(frontend_dist, "index.html")
         if os.path.exists(index_path):
             return FileResponse(index_path)
