@@ -8,7 +8,8 @@ import sys
 # Ensure the backend directory is in the Python path
 sys.path.insert(0, os.path.dirname(__file__))
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
+from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -34,7 +35,19 @@ async def lifespan(app: FastAPI):
     run_migrations()
     print("[OK] Database migrations complete (PostgreSQL)")
     print(f"[DB] PostgreSQL: {os.environ.get('DATABASE_URL', 'postgresql://localhost:5432/adani_tracker')}")
-    print(f"[PATH] Searching for Frontend at: {os.path.abspath(frontend_dist)}") # <--- ADD THIS
+    
+    abs_frontend = os.path.abspath(frontend_dist)
+    print(f"[PATH] Searching for Frontend at: {abs_frontend}")
+    
+    # Verify file existence diagnostic
+    assets_path = os.path.join(abs_frontend, "assets")
+    if os.path.exists(assets_path):
+        print(f"[FILES] Content of {assets_path}:")
+        for f in os.listdir(assets_path):
+            print(f"  - {f}")
+    else:
+        print(f"[ERROR] Assets folder NOT FOUND at: {assets_path}")
+        
     yield
 
 app = FastAPI(
