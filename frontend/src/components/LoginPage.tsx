@@ -65,12 +65,12 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div className="p-6">
+        <div className="p-10">
           {/* Error Message */}
           {error && (
-            <div className="mb-4 p-3 bg-[#BD3861]/10 text-[#BD3861] rounded-lg text-sm border border-[#BD3861]/20">
+            <div className="mb-6 p-4 bg-[#BD3861]/10 text-[#BD3861] rounded-xl text-xs border border-[#BD3861]/20 font-bold uppercase tracking-widest">
               <div className="flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
                 {error}
@@ -78,20 +78,20 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* SSO Login Button */}
+          {/* SSO Login Button (The single primary action) */}
           <button
             onClick={() => window.location.href = `${API_BASE}/api/sso/login`}
-            className="w-full mb-6 py-2 bg-linear-to-r from-[#0B74B0] to-[#75479C] text-white rounded-lg font-medium transition duration-300 ease-in-out transform hover:scale-[1.02] flex items-center justify-center shadow-md"
+            className="w-full mb-8 py-4 bg-linear-to-r from-[#0B74B0] via-[#75479C] to-[#BD3861] text-white rounded-xl font-black uppercase tracking-[0.2em] transition-all duration-300 ease-in-out transform hover:scale-[1.02] flex items-center justify-center shadow-[0_10px_20px_rgba(11,116,176,0.3)] border border-white/10"
           >
             Login with Adani SSO
           </button>
 
-          <div className="relative mb-6">
+          <div className="relative mb-8">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-200 dark:border-gray-700"></div>
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="px-2 bg-white dark:bg-gray-800 text-gray-500">or use credentials</span>
+            <div className="relative flex justify-center text-[10px] uppercase tracking-[0.4em]">
+              <span className="px-4 bg-white dark:bg-gray-800 text-gray-500 font-bold">or use credentials</span>
             </div>
           </div>
 
