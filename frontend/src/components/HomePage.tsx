@@ -97,83 +97,33 @@ const HomePage = () => {
                 {/* 3. Primary Action — Login */}
                 <div className="mt-10 animate-in slide-in-from-bottom-12 duration-1000 delay-500 fill-mode-both w-full max-w-sm">
                     {!user ? (
-                        <div className="bg-white/10 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl">
-                            <h3 className="text-white text-lg font-black uppercase tracking-widest mb-6 opacity-80">Portal Authentication</h3>
+                        <div className="bg-white/10 backdrop-blur-xl border border-white/10 p-10 rounded-3xl shadow-2xl space-y-6">
+                            <h3 className="text-white text-lg font-black uppercase tracking-widest mb-4 opacity-80">Portal Access</h3>
                             
-                            {/* SSO Login Button */}
+                            {/* Primary Action: SSO */}
                             <button
                                 onClick={() => window.location.href = `${API_BASE}/api/sso/login`}
-                                className="w-full mb-8 py-4 bg-linear-to-r from-[#0B74B0] to-[#75479C] text-white text-xs font-black uppercase tracking-[0.2em] rounded-xl hover:scale-[1.02] transition-all active:scale-95 cursor-pointer shadow-lg flex items-center justify-center gap-3"
+                                className="w-full py-5 bg-linear-to-r from-[#0B74B0] via-[#75479C] to-[#BD3861] text-white text-sm font-black uppercase tracking-[0.3em] rounded-xl hover:scale-[1.02] transition-all active:scale-95 cursor-pointer shadow-[0_10px_20px_rgba(11,116,176,0.3)] border border-white/20"
                             >
                                 Login with Adani SSO
                             </button>
 
-                            <div className="relative mb-8">
+                            <div className="relative py-2">
                                 <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-white/10"></div>
+                                    <div className="w-full border-t border-white/5"></div>
                                 </div>
-                                <div className="relative flex justify-center text-xs uppercase tracking-widest">
-                                    <span className="px-2 bg-[#0c0c0c]/0 text-white/40 font-black">or use credentials</span>
+                                <div className="relative flex justify-center text-[10px] uppercase tracking-[0.4em]">
+                                    <span className="px-4 bg-transparent text-white/30 font-black">or</span>
                                 </div>
                             </div>
 
-                            <form 
-                                onSubmit={async (e) => {
-                                    e.preventDefault();
-                                    const fd = new FormData(e.currentTarget);
-                                    const email = fd.get('email') as string;
-                                    const pass = fd.get('password') as string;
-                                    try {
-                                        await login(email, pass);
-                                        navigate('/application');
-                                    } catch (err: any) {
-                                        alert(err.message || "Login Failed");
-                                    }
-                                }}
-                                className="space-y-4"
+                            {/* Secondary Action: Standard Login */}
+                            <button 
+                                onClick={() => navigate('/login')}
+                                className="w-full py-3 text-[10px] font-black text-white/50 uppercase tracking-[0.2em] hover:text-white transition-colors border border-white/5 rounded-lg hover:border-white/20"
                             >
-                                <div className="space-y-1 text-left">
-                                    <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest ml-1">Identity</label>
-                                    <input 
-                                        name="email" 
-                                        type="email" 
-                                        placeholder="Email Address" 
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-[#0B74B0] transition-all font-medium" 
-                                        required
-                                    />
-                                </div>
-                                <div className="space-y-1 text-left">
-                                    <label className="text-[10px] font-black text-[#BD3861] uppercase tracking-widest ml-1">Security Key</label>
-                                    <input 
-                                        name="password" 
-                                        type="password" 
-                                        placeholder="••••••••" 
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-[#BD3861] transition-all font-medium" 
-                                        required
-                                    />
-                                </div>
-                                <button
-                                    type="submit"
-                                    className="w-full mt-4 py-4 bg-gradient-to-r from-[#0B74B0] via-[#75479C] to-[#BD3861] text-white text-xs font-black uppercase tracking-[0.2em] rounded-xl hover:scale-[1.02] transition-all active:scale-95 cursor-pointer shadow-lg"
-                                >
-                                    Authorize Access
-                                </button>
-                            </form>
-                            
-                            <div className="mt-6 pt-6 border-t border-white/5 grid grid-cols-2 gap-3">
-                                <button 
-                                    onClick={() => login('admin@adani.com', 'adani123456').then(() => navigate('/application'))}
-                                    className="text-[9px] font-black text-white/40 uppercase tracking-widest hover:text-white transition-colors py-2 border border-white/5 rounded-lg hover:border-white/20"
-                                >
-                                    Quick Admin
-                                </button>
-                                <button 
-                                    onClick={() => login('superadmin@adani.com', 'adani123').then(() => navigate('/application'))}
-                                    className="text-[9px] font-black text-white/40 uppercase tracking-widest hover:text-white transition-colors py-2 border border-white/5 rounded-lg hover:border-white/20"
-                                >
-                                    CEO View
-                                </button>
-                            </div>
+                                Standard Credentials
+                            </button>
                         </div>
                     ) : (
                         <button
