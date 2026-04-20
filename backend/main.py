@@ -108,19 +108,31 @@ if os.path.exists(frontend_dist):
     async def catch_all(path_name: str, request: Request):
         # 1. Try to serve exact file from frontend_dist (CSS, JS, Images, etc.)
         file_path = os.path.join(frontend_dist, path_name)
+        
         if os.path.isfile(file_path):
             return FileResponse(file_path)
 
-        # 2. If it's an API route that wasn't caught, return JSON error
-        if path_name.startswith("api/"):
-            return {"error": f"API route '{path_name}' not found"}
+        # 2. Prevent MIME type errors! 
+        # If the browser asks for a CSS/JS file and it's missing, return a 404, NOT index.html.
+        if any(path_name.endswith(ext) for ext in [".css", ".js", ".map", ".ico", ".png", ".jpg"]):
+            return JSONResponse(
+                status_code=404, 
+                content={"error": f"Static asset '{path_name}' not found on server"}
+            )
 
-        # 3. Fallback to index.html for React Router (Single Page Application)
+        # 3. If it's an API route that wasn't caught, return JSON error
+        if path_name.startswith("api/"):
+            return JSONResponse(
+                status_code=404, 
+                content={"error": f"API route '{path_name}' not found"}
+            )
+
+        # 4. Fallback to index.html for React Router (SPA)
         index_path = os.path.join(frontend_dist, "index.html")
         if os.path.exists(index_path):
             return FileResponse(index_path)
 
-        return {"error": "Frontend build not found"}
+        return JSONResponse(status_code=404, content={"error": "Frontend build not found"})
 
 if __name__ == "__main__":
     import uvicorn
