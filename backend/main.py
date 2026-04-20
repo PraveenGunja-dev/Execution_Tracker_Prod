@@ -47,6 +47,7 @@ app = FastAPI(
         "2. **Use the token:** Add `Authorization: Bearer <token>` header to all requests\n"
     ),
     lifespan=lifespan,
+    root_path=os.getenv("FASTAPI_ROOT_PATH", ""),
 )
 
 # CORS — allow the React dev server
@@ -75,24 +76,10 @@ app.include_router(admin.router)
 app.include_router(upload.router)
 app.include_router(chat.router)
 app.include_router(sso.router)
-
-# Register routers under /execution-tracker so that frontend fetches resolve correctly when served from main base path
-app.include_router(auth.router, prefix="/execution-tracker")
-app.include_router(users.router, prefix="/execution-tracker")
-app.include_router(projects.router, prefix="/execution-tracker")
-app.include_router(summaries.router, prefix="/execution-tracker")
-app.include_router(dropdowns.router, prefix="/execution-tracker")
-app.include_router(milestones.router, prefix="/execution-tracker")
-app.include_router(admin.router, prefix="/execution-tracker")
-app.include_router(upload.router, prefix="/execution-tracker")
-app.include_router(chat.router, prefix="/execution-tracker")
-app.include_router(sso.router, prefix="/execution-tracker")
 app.include_router(logs.router)
-app.include_router(logs.router, prefix="/execution-tracker")
 
 # ── Register new versioned API router (JWT-protected) ────────────
 app.include_router(api_v1.router)
-app.include_router(api_v1.router, prefix="/execution-tracker")
 
 
 @app.get("/")
@@ -144,5 +131,5 @@ if __name__ == "__main__":
     import uvicorn
     # Use PORT from env if available, else default to 3122
     # In earlier revisions it was set to 3121, switching to 3122 for testing
-    port = int(os.environ.get("PORT", 3122))
+    port = int(os.environ.get("PORT", 3121))
     uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
