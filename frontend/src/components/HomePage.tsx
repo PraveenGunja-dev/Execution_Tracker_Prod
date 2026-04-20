@@ -97,33 +97,20 @@ const HomePage = () => {
                 {/* 3. Primary Action — Login */}
                 <div className="mt-10 animate-in slide-in-from-bottom-12 duration-1000 delay-500 fill-mode-both w-full max-w-sm">
                     {!user ? (
-                        <div className="bg-white/10 backdrop-blur-xl border border-white/10 p-10 rounded-3xl shadow-2xl space-y-6">
-                            <h3 className="text-white text-lg font-black uppercase tracking-widest mb-4 opacity-80">Portal Access</h3>
+                        <div className="bg-white/10 backdrop-blur-xl border border-white/10 p-12 rounded-3xl shadow-2xl space-y-8 flex flex-col items-center">
+                            <h3 className="text-white text-lg font-black uppercase tracking-widest opacity-80">Portal Access</h3>
                             
-                            {/* Primary Action: SSO */}
+                            {/* The ONLY Login Action */}
                             <button
                                 onClick={() => window.location.href = `${API_BASE}/api/sso/login`}
-                                className="w-full py-5 bg-linear-to-r from-[#0B74B0] via-[#75479C] to-[#BD3861] text-white text-sm font-black uppercase tracking-[0.3em] rounded-xl hover:scale-[1.02] transition-all active:scale-95 cursor-pointer shadow-[0_10px_20px_rgba(11,116,176,0.3)] border border-white/20"
+                                className="w-full max-w-xs py-6 bg-linear-to-r from-[#0B74B0] via-[#75479C] to-[#BD3861] text-white text-sm font-black uppercase tracking-[0.3em] rounded-xl hover:scale-[1.05] transition-all active:scale-95 cursor-pointer shadow-[0_20px_40px_rgba(11,116,176,0.4)] border border-white/20"
                             >
                                 Login with Adani SSO
                             </button>
 
-                            <div className="relative py-2">
-                                <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-white/5"></div>
-                                </div>
-                                <div className="relative flex justify-center text-[10px] uppercase tracking-[0.4em]">
-                                    <span className="px-4 bg-transparent text-white/30 font-black">or</span>
-                                </div>
-                            </div>
-
-                            {/* Secondary Action: Standard Login */}
-                            <button 
-                                onClick={() => navigate('/login')}
-                                className="w-full py-3 text-[10px] font-black text-white/50 uppercase tracking-[0.2em] hover:text-white transition-colors border border-white/5 rounded-lg hover:border-white/20"
-                            >
-                                Standard Credentials
-                            </button>
+                            <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest">
+                                Corporate Authentication Required
+                            </p>
                         </div>
                     ) : (
                         <button
