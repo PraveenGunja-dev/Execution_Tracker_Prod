@@ -42,10 +42,10 @@ yarn-error.log*
 next-env.d.ts
 
 # database
-/data/*.db
-/data/*.db-*
-/data/*.db-shm
-/data/*.db-wal
+# /data/*.db
+# /data/*.db-*
+# /data/*.db-shm
+# /data/*.db-wal
 
 # python
 __pycache__/
