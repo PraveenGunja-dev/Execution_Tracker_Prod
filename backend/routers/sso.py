@@ -17,15 +17,11 @@ from auth_utils import create_access_token
 router = APIRouter(prefix="/api/sso", tags=["sso"])
 
 # ── Load SSO Configuration from Environment ─────────────────────────
-TENANT_ID = os.environ.get("SSO_TENANT_ID", "04c72f56-1848-46a2-8167-8e5d36510cbc")
-SP_BASE_URL = os.environ.get("SSO_SP_BASE_URL", "https://digitalized-dpr.adani.com")
-FRONTEND_URL = os.environ.get("SSO_FRONTEND_URL", "https://digitalized-dpr.adani.com/execution-tracker")
+TENANT_ID = os.environ.get("SSO_TENANT_ID")
+SP_BASE_URL = os.environ.get("SSO_SP_BASE_URL")
+FRONTEND_URL = os.environ.get("SSO_FRONTEND_URL")
 ENABLE_SSO = os.environ.get("ENABLE_SSO", "false").lower() == "true"
-
-# Force override to avoid .env copy-paste errors on the server
-if not FRONTEND_URL.endswith("execution-tracker"):
-    FRONTEND_URL = "https://digitalized-dpr.adani.com/execution-tracker"
-SAML_CERT = os.environ.get("SSO_SAML_CERT", "")
+SAML_CERT = os.environ.get("SSO_SAML_CERT")
 
 def _get_saml_settings():
     """Build python3-saml settings dict from Azure AD metadata."""
