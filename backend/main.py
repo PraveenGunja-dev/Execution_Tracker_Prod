@@ -34,6 +34,7 @@ async def lifespan(app: FastAPI):
     run_migrations()
     print("[OK] Database migrations complete (PostgreSQL)")
     print(f"[DB] PostgreSQL: {os.environ.get('DATABASE_URL', 'postgresql://localhost:5432/adani_tracker')}")
+    print(f"[PATH] Searching for Frontend at: {os.path.abspath(frontend_dist)}") # <--- ADD THIS
     yield
 
 app = FastAPI(
@@ -108,6 +109,9 @@ if os.path.exists(frontend_dist):
     async def catch_all(path_name: str, request: Request):
         # 1. Try to serve exact file from frontend_dist (CSS, JS, Images, etc.)
         file_path = os.path.join(frontend_dist, path_name)
+        
+        # DEBUG LOGGING (Check your terminal for these prints!)
+        print(f"[DEBUG] Requested: {path_name} | Looking at: {file_path}")
         
         if os.path.isfile(file_path):
             return FileResponse(file_path)
