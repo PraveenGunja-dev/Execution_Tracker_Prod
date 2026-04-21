@@ -40,10 +40,10 @@ def _get_msal_client():
 def _get_redirect_uri(request: Request):
     """
     Build the absolute redirect URI for Azure AD.
-    Must include the subpath (ROOT_PATH) so Nginx routes the callback here.
+    Must exactly match the registered URI in the Azure Portal to prevent AADSTS50011.
     """
     base_url = os.environ.get("APP_BASE_URL", "https://digitalized-dpr.adani.com").rstrip('/')
-    return f"{base_url}{ROOT_PATH}/api/sso/callback"
+    return f"{base_url}/api/sso/callback"
 
 
 @router.get("/login")
