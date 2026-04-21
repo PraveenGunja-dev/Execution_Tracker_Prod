@@ -10,7 +10,12 @@ from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 # ── Configuration (from environment) ─────────────────────────────
-JWT_SECRET = os.environ.get("JWT_SECRET", "ceo-tracker-jwt-secret-change-in-production-2026")
+JWT_SECRET = os.environ.get("JWT_SECRET")
+
+if not JWT_SECRET:
+    # Use a secure random secret as fallback if not provided in environment
+    import secrets
+    JWT_SECRET = secrets.token_urlsafe(32)
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRY_HOURS = int(os.environ.get("JWT_EXPIRY_HOURS", "24"))
 

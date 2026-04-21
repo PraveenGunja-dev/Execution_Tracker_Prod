@@ -8,10 +8,10 @@ from psycopg2.extras import RealDictCursor
 from psycopg2 import pool as pg_pool
 from contextlib import contextmanager
 
-DATABASE_URL = os.environ.get(
-    "DATABASE_URL",
-    "postgresql://postgres:password@localhost:5432/Execution_Tracker",
-)
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL not found in environment. The application cannot start without a database connection.")
 
 _pool: pg_pool.ThreadedConnectionPool | None = None
 

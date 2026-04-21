@@ -25,10 +25,11 @@ load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
 
 # Configuration
 SQLITE_PATH = os.path.join(os.path.dirname(__file__), "data", "adani-excel.db")
-PG_URL = os.environ.get(
-    "DATABASE_URL",
-    "postgres://psqladmin:1k8h02grUu%2BqJ2uHZb%3C%7BlB3LF%25%2BYj-Ar@az10psqldmrcbtp01.postgres.database.azure.com:5432/Execution_Tracker?sslmode=require",
-)
+PG_URL = os.environ.get("DATABASE_URL")
+
+if not PG_URL:
+    print("[ERROR] DATABASE_URL not found in environment or .env file.")
+    sys.exit(1)
 
 # Tables to migrate (order matters for foreign keys)
 TABLES = [

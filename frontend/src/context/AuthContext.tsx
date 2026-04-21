@@ -39,23 +39,48 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [searchParams] = useSearchParams();
     const navigate = useNavigate();
 
-    // ── On mount: restore from localStorage ──
+    // ── On mount: restore from localStorage or handle SSO callback ──
     useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
+        const ssoAuth = searchParams.get('sso_auth');
+        
+        if (ssoAuth) {
             try {
-                const parsed = JSON.parse(storedUser);
-                // Normalize role
-                if (parsed.role === 'USER') parsed.role = 'VIEWER';
-                setUser(parsed);
-            } catch {
-                localStorage.removeItem('user');
+                // Decode from base64
+                const decoded = JSON.parse(atob(ssoAuth.replace(/-/g, '+').replace(/_/g, '/')));
+                
+                const userData: User = {
+                    id: decoded.id,
+                    username: decoded.username,
+                    email: decoded.email,
+                    role: ((decoded.role || 'VIEWER') === 'USER' ? 'VIEWER' : decoded.role).toUpperCase() as UserRole,
+                    scope: decoded.scope || 'all',
+                };
+                
+                setUser(userData);
+                localStorage.setItem('user', JSON.stringify(userData));
+                localStorage.setItem('token', decoded.access_token);
+                
+                // Clear the URL
+                navigate('/application', { replace: true });
+            } catch (err) {
+                console.error("Failed to parse SSO auth", err);
+            }
+        } else {
+            const storedUser = localStorage.getItem('user');
+            if (storedUser) {
+                try {
+                    const parsed = JSON.parse(storedUser);
+                    setUser(parsed);
+                } catch {
+                    localStorage.removeItem('user');
+                }
             }
         }
         setIsLoading(false);
-    }, []);
+    }, [searchParams, navigate]);
 
     // ── Traditional email/password login ─────────────────────────
     const login = async (email: string, password: string) => {

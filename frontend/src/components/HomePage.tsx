@@ -97,9 +97,7 @@ const HomePage = () => {
                 {/* 3. Primary Action — Login */}
                 <div className="mt-10 animate-in slide-in-from-bottom-12 duration-1000 delay-500 fill-mode-both w-full max-w-sm">
                     {!user ? (
-                        <div className="bg-white/10 backdrop-blur-xl border border-white/10 p-12 rounded-3xl shadow-2xl space-y-8 flex flex-col items-center">
-                            <h3 className="text-white text-lg font-black uppercase tracking-widest opacity-80">Portal Access</h3>
-                            
+                        <div className=" backdrop-blur-xl rounded-3xl shadow-2xl flex flex-col items-center">
                             {/* The ONLY Login Action */}
                             <button
                                 onClick={() => window.location.href = `${API_BASE}/api/sso/login`}
@@ -107,10 +105,6 @@ const HomePage = () => {
                             >
                                 Login with Adani SSO
                             </button>
-
-                            <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest">
-                                Corporate Authentication Required
-                            </p>
                         </div>
                     ) : (
                         <button

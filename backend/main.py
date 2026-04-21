@@ -16,7 +16,7 @@ from fastapi.responses import FileResponse
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv()
+load_dotenv(override=True)
 
 from database import run_migrations
 
@@ -64,20 +64,39 @@ app = FastAPI(
     root_path=os.getenv("FASTAPI_ROOT_PATH", ""),
 )
 
-# CORS — allow the React dev server
+# CORS — allow the React dev server and production domain
+origins = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:5174",
+    "https://digitalized-dpr.adani.com",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:5174",
-    ],
+    allow_origins=origins if os.getenv("NODE_ENV") != "development" else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Content-Length", "Content-Type"],
 )
+
+# ─── Path prefix stripping middleware ─────────────────────────
+@app.middleware("http")
+async def strip_path_prefix(request: Request, call_next):
+    """Strip prefix from URL path if it exists (for Nginx compatibility)."""
+    path = request.scope["path"]
+    prefix = os.getenv("FASTAPI_ROOT_PATH", "")
+    
+    if prefix and path.startswith(prefix + "/api"):
+        request.scope["path"] = path.replace(prefix + "/api", "/api", 1)
+    elif prefix and path.startswith(prefix):
+        request.scope["path"] = path.replace(prefix, "", 1)
+        
+    response = await call_next(request)
+    return response
 
 # ── Register existing routers (backward compatible) ──────────────
 app.include_router(auth.router)
