@@ -7,8 +7,12 @@ import LoginPage from './components/LoginPage';
 import HomePage from './components/HomePage';
 
 export default function App() {
+    // Explicitly set basename for production subpath
+    const isProd = !window.location.hostname.includes("localhost") && !window.location.hostname.includes("127.0.0.1");
+    const basename = isProd ? "/execution-tracker" : "";
+
     return (
-        <BrowserRouter basename={import.meta.env.BASE_URL}>
+        <BrowserRouter basename={basename}>
             <ReactQueryProvider>
                 <AuthProvider>
                     <Routes>
