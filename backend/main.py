@@ -1,6 +1,6 @@
 """
 CEO-Tracker FastAPI Backend (PostgreSQL)
-Run: uvicorn main:app --reload --port 8000
+Run: uvicorn main:app --reload --port 3121
 """
 import os
 import sys
@@ -8,14 +8,13 @@ import sys
 # Ensure the backend directory is in the Python path
 sys.path.insert(0, os.path.dirname(__file__))
 
-from fastapi import FastAPI, Request, Response
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from dotenv import load_dotenv
 
-# Force load_dotenv to look in the backend directory specifically
+# Force load .env from the absolute path to prevent config issues
 current_dir = os.path.dirname(os.path.abspath(__file__))
 env_path = os.path.join(current_dir, ".env")
 load_dotenv(dotenv_path=env_path, override=True)
@@ -24,10 +23,6 @@ from database import run_migrations
 
 # Import all routers
 from routers import auth, users, projects, summaries, dropdowns, milestones, admin, upload, chat, sso, logs
-from routers import api_v1
-
-# Define paths
-frontend_dist = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "dist")
 
 from contextlib import asynccontextmanager
 
@@ -35,72 +30,28 @@ from contextlib import asynccontextmanager
 async def lifespan(app: FastAPI):
     """Run DB migrations on startup."""
     run_migrations()
-    print("[OK] Database migrations complete (PostgreSQL)")
-    print(f"[DB] PostgreSQL: {os.environ.get('DATABASE_URL', 'postgresql://localhost:5432/adani_tracker')}")
-    
-    abs_frontend = os.path.abspath(frontend_dist)
-    print(f"[PATH] Searching for Frontend at: {abs_frontend}")
-    
-    # Verify file existence diagnostic
-    assets_path = os.path.join(abs_frontend, "assets")
-    if os.path.exists(assets_path):
-        print(f"[FILES] Content of {assets_path}:")
-        for f in os.listdir(assets_path):
-            print(f"  - {f}")
-    else:
-        print(f"[ERROR] Assets folder NOT FOUND at: {assets_path}")
-        
+    print("[OK] PostgreSQL migrations complete")
     yield
 
 app = FastAPI(
     title="CEO Execution Tracker API",
     version="2.0.0",
-    description=(
-        "FastAPI backend for the AGEL Commissioning Dashboard.\n\n"
-        "## Authentication\n"
-        "The `/api/v1/*` endpoints require JWT Bearer token authentication.\n\n"
-        "1. **Get a token:** `POST /api/v1/auth/token` with `{email, password}`\n"
-        "2. **Use the token:** Add `Authorization: Bearer <token>` header to all requests\n"
-    ),
+    description="FastAPI backend for the AGEL Commissioning Dashboard (PostgreSQL)",
     lifespan=lifespan,
-    root_path=os.getenv("FASTAPI_ROOT_PATH", ""),
+    root_path=os.environ.get("FASTAPI_ROOT_PATH", ""),
 )
 
 # CORS — allow the React dev server and production domain
-origins = [
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:5174",
-    "https://digitalized-dpr.adani.com",
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins if os.getenv("NODE_ENV") != "development" else ["*"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["Content-Length", "Content-Type"],
 )
 
-# ─── Path prefix stripping middleware ─────────────────────────
-@app.middleware("http")
-async def strip_path_prefix(request: Request, call_next):
-    """Strip prefix from URL path if it exists (for Nginx compatibility)."""
-    path = request.scope["path"]
-    prefix = os.getenv("FASTAPI_ROOT_PATH", "")
-    
-    if prefix and path.startswith(prefix + "/api"):
-        request.scope["path"] = path.replace(prefix + "/api", "/api", 1)
-    elif prefix and path.startswith(prefix):
-        request.scope["path"] = path.replace(prefix, "", 1)
-        
-    response = await call_next(request)
-    return response
-
-# ── Register existing routers (backward compatible) ──────────────
+# --- REGISTER ROUTERS TWICE (For maximum subpath stability) ---
+# 1. Root level
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(projects.router)
@@ -113,8 +64,19 @@ app.include_router(chat.router)
 app.include_router(sso.router)
 app.include_router(logs.router)
 
-# ── Register new versioned API router (JWT-protected) ────────────
-app.include_router(api_v1.router)
+# 2. Subpath level (/execution-tracker)
+prefix = "/execution-tracker"
+app.include_router(auth.router, prefix=prefix)
+app.include_router(users.router, prefix=prefix)
+app.include_router(projects.router, prefix=prefix)
+app.include_router(summaries.router, prefix=prefix)
+app.include_router(dropdowns.router, prefix=prefix)
+app.include_router(milestones.router, prefix=prefix)
+app.include_router(admin.router, prefix=prefix)
+app.include_router(upload.router, prefix=prefix)
+app.include_router(chat.router, prefix=prefix)
+app.include_router(sso.router, prefix=prefix)
+app.include_router(logs.router, prefix=prefix)
 
 
 @app.get("/")
@@ -123,46 +85,39 @@ async def root():
     index_path = os.path.join(frontend_dist, "index.html")
     if os.path.exists(index_path):
         return FileResponse(index_path)
-    return {"message": "CEO Execution Tracker API is running", "version": "2.0.0", "database": "PostgreSQL"}
+    return {"message": "CEO Execution Tracker API is running", "version": "2.0.0"}
 
 
 @app.get("/health")
 async def health():
     return {"status": "ok", "database": "postgresql"}
 
-# Serve FastAPI static files for frontend
+frontend_dist = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "dist")
+
 if os.path.exists(frontend_dist):
+    # Mount assets for the /execution-tracker/ prefix
+    assets_dir = os.path.join(frontend_dist, "assets")
+    if os.path.exists(assets_dir):
+        app.mount("/execution-tracker/assets", StaticFiles(directory=assets_dir), name="assets")
+
     @app.api_route("/{path_name:path}", methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"])
     async def catch_all(path_name: str, request: Request):
-        # 1. Generate full path
-        clean_path = path_name.replace("/", os.sep)
-        file_path = os.path.abspath(os.path.join(frontend_dist, clean_path))
-        
-        # DEBUG LOGGING (Very important to see this!)
-        print(f"[DEBUG] Request Path: '{path_name}' -> Searching in: {file_path}")
-        
-        # 2. Try to serve exact file (CSS, JS, Images, etc.)
-        if os.path.isfile(file_path):
+        # 1. 404 for missing API routes
+        if path_name.startswith("api/"):
+            return {"error": f"API route '{path_name}' not found"}
+
+        # 2. Try to serve exact file from frontend_dist
+        file_path = os.path.join(frontend_dist, path_name)
+        if path_name and os.path.isfile(file_path):
             return FileResponse(file_path)
 
-        # 3. Prevent MIME type errors for missing assets
-        if any(path_name.endswith(ext) for ext in [".css", ".js", ".map", ".ico", ".png", ".jpg"]):
-            return JSONResponse(status_code=404, content={"error": f"Asset '{path_name}' not found"})
-
-        # 4. If it's an API route that wasn't caught, return JSON error
-        if path_name.startswith("api/"):
-            return JSONResponse(status_code=404, content={"error": "API not found"})
-
-        # 5. Fallback to index.html for React Router
+        # 3. Fallback to index.html for React Router
         index_path = os.path.join(frontend_dist, "index.html")
         if os.path.exists(index_path):
             return FileResponse(index_path)
 
-        return JSONResponse(status_code=404, content={"error": "Frontend build not found"})
+        return {"error": "Frontend build not found"}
 
 if __name__ == "__main__":
     import uvicorn
-    # Use PORT from env if available, else default to 3122
-    # In earlier revisions it was set to 3121, switching to 3122 for testing
-    port = int(os.environ.get("PORT", 3121))
-    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=3121, reload=True)
