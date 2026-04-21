@@ -39,12 +39,11 @@ def _get_msal_client():
 
 def _get_redirect_uri(request: Request):
     """
-    FORCE the production redirect URI to prevent 'http://127.0.0.1' mismatch.
+    Build the absolute redirect URI for Azure AD.
+    Must include the subpath (ROOT_PATH) so Nginx routes the callback here.
     """
-    # 1. Try to use it from .env or fallback
     base_url = os.environ.get("APP_BASE_URL", "https://digitalized-dpr.adani.com").rstrip('/')
-    # 2. Match the Aegis Pattern (root level)
-    return f"{base_url}/api/sso/callback"
+    return f"{base_url}{ROOT_PATH}/api/sso/callback"
 
 
 @router.get("/login")
