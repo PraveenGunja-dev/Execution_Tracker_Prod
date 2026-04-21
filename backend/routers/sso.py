@@ -150,12 +150,14 @@ async def sso_callback(request: Request, code: Optional[str] = None):
     import base64
     encoded = base64.urlsafe_b64encode(json.dumps(user_payload).encode()).decode()
 
-    # Final redirect back to frontend
-    # frontend_url = f"{ROOT_PATH}/application"
+    # FORCE the return path to include /execution-tracker/ explicitly
+    # This prevents the user from being redirected to the root domain's /application
+    target_base = os.environ.get("APP_BASE_URL", "https://digitalized-dpr.adani.com").rstrip('/')
+    target_url = f"{target_base}/execution-tracker/application?sso_auth={encoded}"
     
-    # Use the root path to ensure Nginx serves the correct frontend
-    response = RedirectResponse(url=f"{ROOT_PATH}/application?sso_auth={encoded}", status_code=303)
-    return response
+    print(f"[SSO] Handshake complete for {email}. Redirecting to: {target_url}")
+    
+    return RedirectResponse(url=target_url, status_code=303)
 
 
 @router.get("/metadata")
