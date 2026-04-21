@@ -73,6 +73,9 @@ async def sso_login(request: Request):
 @router.get("/callback")
 async def sso_callback(request: Request, code: Optional[str] = None):
     """Handle the callback from Microsoft and exchange code for tokens."""
+    # DEBUG: See if this backend is actually receiving the callback
+    print(f"[DEBUG] Callback hit on Tracker (3121). State: {request.query_params.get('state')}")
+    
     if not code:
         # If no code, maybe it's just a direct hit, redirect to main app
         return RedirectResponse(f"{ROOT_PATH}/application")
