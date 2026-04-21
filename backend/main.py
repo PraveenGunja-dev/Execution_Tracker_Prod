@@ -15,8 +15,10 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv(override=True)
+# Force load_dotenv to look in the backend directory specifically
+current_dir = os.path.dirname(os.path.abspath(__file__))
+env_path = os.path.join(current_dir, ".env")
+load_dotenv(dotenv_path=env_path, override=True)
 
 from database import run_migrations
 

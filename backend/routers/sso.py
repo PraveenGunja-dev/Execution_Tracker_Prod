@@ -39,15 +39,12 @@ def _get_msal_client():
 
 def _get_redirect_uri(request: Request):
     """
-    Build the absolute redirect URI for Azure AD.
-    Must match the URI registered in Azure Portal.
+    FORCE the production redirect URI to prevent 'http://127.0.0.1' mismatch.
     """
-    # For production, we use the APP_BASE_URL + ROOT_PATH
-    if "localhost" not in request.url.hostname and "127.0.0.1" not in request.url.hostname:
-        return f"{APP_BASE_URL}{ROOT_PATH}/api/sso/callback"
-    
-    # For local dev
-    return f"{request.url.scheme}://{request.url.netloc}{ROOT_PATH}/api/sso/callback"
+    # 1. Try to use it from .env or fallback
+    base_url = os.environ.get("APP_BASE_URL", "https://digitalized-dpr.adani.com").rstrip('/')
+    # 2. Match the Aegis Pattern (root level)
+    return f"{base_url}/api/sso/callback"
 
 
 @router.get("/login")
@@ -57,15 +54,18 @@ async def sso_login(request: Request):
     if not client:
         raise HTTPException(500, detail="SSO Not Configured")
     
-    # Define scopes
-    scopes = ["User.Read"]
+    # 1. Aegis Pattern: send a state
+    state = "execution-tracker"
     
-    # Generate auth URL
+    # 2. Build URL
     redirect_uri = _get_redirect_uri(request)
     auth_url = client.get_authorization_request_url(
-        scopes,
+        ["User.Read"],
         redirect_uri=redirect_uri,
+        state=state
     )
+    
+    print(f"[SSO] Redirect URI sent to Azure: {redirect_uri}")
     
     return RedirectResponse(auth_url)
 
